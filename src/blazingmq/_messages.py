@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from typing import Callable
 from typing import Optional
 from typing import TYPE_CHECKING
 
@@ -41,7 +42,7 @@ def create_delivered_message(
 ) -> Message:
     inst = Message.__new__(Message)
     assert isinstance(inst, Message)
-    inst._set_attrs(data, guid, queue_uri, properties, property_types)
+    inst._set_attrs(data, guid, queue_uri, properties, property_types, None)
     return inst
 
 
@@ -57,7 +58,9 @@ class Message:
     A `Message` delivered by the broker will have its `Message.guid` field set.
     Any `Message` that you produce will not have a GUID, as the GUID will be
     assigned internally by BlazingMQ.  You should avoid setting the
-    `Message.guid` field yourself.
+    `Message.guid` field yourself.  In contrast, a `Message` delivered by the
+    broker will have no `Message.on_ack` set.  If you want to invoke a callback
+    on a message you produce being acknowledged, you may set this callback.
 
     Attributes:
         data (bytes): Payload for the message received from BlazingMQ.
@@ -70,6 +73,10 @@ class Message:
         property_types (dict): A mapping of property names to
             `PropertyType` types. The dictionary is guaranteed to provide
             a value for each key already present in `Message.properties`
+        on_ack (Optional[Callable[[~blazingmq.Ack], None]]): optionally
+            specified callback which is invoked with the acknowledgment state
+            of the message being posted.  This may only be set on messages
+            produced by this client.
     """
 
     def _set_attrs(
@@ -79,6 +86,7 @@ class Message:
         queue_uri: str,
         properties: PropertyValueDict,
         property_types: PropertyTypeDict,
+        on_ack: Optional[Callable[[Ack], None]],
     ) -> None:
         """Teach mypy what our instance variables are despite our private __init__"""
         self.data = data
