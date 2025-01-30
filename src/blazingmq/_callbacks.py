@@ -35,7 +35,7 @@ from ._messages import Ack
 from ._messages import Message
 from ._messages import MessageHandle
 from ._messages import create_ack
-from ._messages import create_message
+from ._messages import create_delivered_message
 from ._messages import create_message_handle
 from .session_events import InterfaceError
 from .session_events import QueueEvent
@@ -116,7 +116,7 @@ def on_message(
         property_types_py = {
             k: property_type_to_py[v] for k, v in property_types.items()
         }
-        message = create_message(
+        message = create_delivered_message(
             data, guid, queue_uri.decode(), properties, property_types_py
         )
         message_handle = create_message_handle(message, ext_session)

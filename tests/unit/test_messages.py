@@ -20,7 +20,7 @@ import pytest
 import blazingmq
 from blazingmq import _callbacks
 from blazingmq._messages import create_ack
-from blazingmq._messages import create_message
+from blazingmq._messages import create_delivered_message
 from blazingmq._messages import create_message_handle
 
 from .support import QUEUE_NAME
@@ -34,7 +34,7 @@ def test_create_message():
     queue_uri = QUEUE_NAME.decode("utf-8")
     properties = {"foo": "m"}
     property_types = {"foo": blazingmq.PropertyType.CHAR}
-    m = create_message(data, guid, queue_uri, properties, property_types)
+    m = create_delivered_message(data, guid, queue_uri, properties, property_types)
 
     # THEN
     assert m.data == data
@@ -62,7 +62,7 @@ def test_message_repr():
     queue_uri = "bmq://foo/bar"
     properties = {"foo": "m"}
     property_types = {"foo": blazingmq.PropertyType.CHAR}
-    m = create_message(data, guid, queue_uri, properties, property_types)
+    m = create_delivered_message(data, guid, queue_uri, properties, property_types)
 
     # THEN
     assert repr(m) == "<Message[00000F0007D9D17AD0E18C2E7A86E154] for bmq://foo/bar>"
@@ -179,7 +179,7 @@ def test_construct_message_handle():
 def test_message_repr_context():
     guid = bytes.fromhex("00000F0007D9D17AD0E18C2E7A86E154")
     queue_uri = "bmq://foo/bar"
-    message = create_message(b"bytes", guid, queue_uri, {}, {})
+    message = create_delivered_message(b"bytes", guid, queue_uri, {}, {})
     ext_session = object()
     msg_handle = create_message_handle(message, ext_session)
 
@@ -190,7 +190,7 @@ def test_message_repr_context():
 
 def test_call_confirm_on_message_handle():
     # GIVEN / WHEN
-    message = create_message(b"bytes", b"guid", QUEUE_NAME.decode("utf-8"), {}, {})
+    message = create_delivered_message(b"bytes", b"guid", QUEUE_NAME.decode("utf-8"), {}, {})
     ext_session = mock.MagicMock()
     ext_session.mock_add_spec(["confirm"])
     msg_handle = create_message_handle(message, ext_session)

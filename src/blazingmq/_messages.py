@@ -32,7 +32,7 @@ def pretty_hex(blob: bytes) -> str:
     return blob.hex().upper()
 
 
-def create_message(
+def create_delivered_message(
     data: bytes,
     guid: bytes,
     queue_uri: str,

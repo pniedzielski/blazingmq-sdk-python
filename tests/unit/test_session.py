@@ -24,7 +24,7 @@ from blazingmq import QueueOptions
 from blazingmq import Session
 from blazingmq import SessionOptions
 from blazingmq import Timeouts
-from blazingmq._messages import create_message
+from blazingmq._messages import create_delivered_message
 from blazingmq._session import DEFAULT_TIMEOUT
 from blazingmq.testing import HostHealth
 
@@ -603,7 +603,7 @@ def test_session_confirm(ext):
     # GIVEN
     ext.mock_add_spec(["confirm"])
     session = make_session()
-    msg = create_message(b"data", b"guid", "queue_uri", {}, {})
+    msg = create_delivered_message(b"data", b"guid", "queue_uri", {}, {})
 
     # WHEN
     session.confirm(msg)
