@@ -46,15 +46,22 @@ def create_message(
 
 
 class Message:
-    """A class representing a message received from BlazingMQ.
+    """A class representing a message sent or received from BlazingMQ.
 
-    A `Message` represents a message delivered by BlazingMQ from a producer
-    to this queue. This message can only be received if the queue is
-    opened with 'read=True' mode enabled.
+    A `Message` represents a message to be sent to BlazingMQ by a producer or
+    to be delivered by BlazingMQ to a consumer of some queue.  This message can
+    only be sent if the queue is opened with ``write=True`` mode enabled, and
+    can only be received if the queue is opened with ``read=True`` mode
+    enabled.
+
+    A `Message` delivered by the broker will have its `Message.guid` field set.
+    Any `Message` that you produce will not have a GUID, as the GUID will be
+    assigned internally by BlazingMQ.  You should avoid setting the
+    `Message.guid` field yourself.
 
     Attributes:
         data (bytes): Payload for the message received from BlazingMQ.
-        guid (bytes): Globally unique id for this message.
+        guid (Optional[bytes]): Globally unique id for this message.
         queue_uri (str): Queue URI this message is for.
         properties (dict): A dictionary of BlazingMQ message properties.
             The dictionary keys must be :class:`str` representing the property
@@ -68,7 +75,7 @@ class Message:
     def _set_attrs(
         self,
         data: bytes,
-        guid: bytes,
+        guid: Optional[bytes],
         queue_uri: str,
         properties: PropertyValueDict,
         property_types: PropertyTypeDict,
@@ -84,7 +91,11 @@ class Message:
         raise Error("The Message class does not have a public constructor.")
 
     def __repr__(self) -> str:
-        return f"<Message[{pretty_hex(self.guid)}] for {self.queue_uri}>"
+        if self.guid is None:
+            guid_str = ""
+        else:
+            guid_str = pretty_hex(self.guid)
+        return f"<Message[{guid_str}] for {self.queue_uri}>"
 
 
 def create_message_handle(message: Message, ext_session: _ext.Session) -> MessageHandle:
@@ -95,7 +106,7 @@ def create_message_handle(message: Message, ext_session: _ext.Session) -> Messag
 
 
 class MessageHandle:
-    """Operations that can be performed on a `Message`.
+    """Operations that can be performed on a `Message` delivered by BlazingMQ.
 
     An instance of this class is received in the ``on_message``
     callback along with an instance of a `Message`.
