@@ -334,7 +334,10 @@ cdef class Session:
              payload not None: bytes,
              properties=None,
              on_ack=None) -> None:
-        self._session.post(queue_uri, payload, len(payload), properties, on_ack)
+        self._session.post(queue_uri, payload, len(payload), properties, on_ack
+
+    def post_batched(self, messages) -> None:
+        self._session.post_batched(messages)
 
     def confirm(self, message not None) -> None:
         self._session.confirm(message.queue_uri, message.guid, len(message.guid))

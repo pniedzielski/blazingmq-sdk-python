@@ -62,6 +62,9 @@ class Message:
     broker will have no `Message.on_ack` set.  If you want to invoke a callback
     on a message you produce being acknowledged, you may set this callback.
 
+    Each message may optionally carry a set of message properties in
+    `Message.properties`. which are attached to the message payload and 
+
     Attributes:
         data (bytes): Payload for the message received from BlazingMQ.
         guid (Optional[bytes]): Globally unique id for this message.
@@ -77,6 +80,7 @@ class Message:
             specified callback which is invoked with the acknowledgment state
             of the message being posted.  This may only be set on messages
             produced by this client.
+
     """
 
     def _set_attrs(
@@ -94,6 +98,7 @@ class Message:
         self.queue_uri = queue_uri
         self.properties = properties
         self.property_types = property_types
+        self.on_ack = on_ack
 
     def __init__(self) -> None:
         raise Error("The Message class does not have a public constructor.")

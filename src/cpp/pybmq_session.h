@@ -105,6 +105,9 @@ class Session
          PyObject* properties,
          PyObject* on_ack);
 
+    PyObject* post_batched(
+            bsl::vector<bsl::tuple<const char*, const char*, size_t, PyObject*, PyObject*>> messages);
+
     PyObject*
     confirm(const char* queue_uri, const unsigned char* guid, size_t guid_length);
 };

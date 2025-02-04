@@ -538,6 +538,77 @@ Session::post(
     Py_RETURN_NONE;
 }
 
+PyObject* Session::post_batched(bsl::vector<bsl::tuple<const char*, const char*, size_t, PyObject*, PyObject*>> messages)
+{
+    bslma::ManagedPtr<PyObject> managed_on_ack;
+    if (on_ack != Py_None) {
+        managed_on_ack = RefUtils::toManagedPtr(RefUtils::ref(on_ack));
+    }
+
+    bmqa::MessageProperties c_properties;
+    if (properties != Py_None) {
+        d_session_mp->loadMessageProperties(&c_properties);
+        if (!pybmq::MessageUtils::load_message_properties(&c_properties, properties)) {
+            return NULL;
+        }
+    }
+
+    try {
+        pybmq::GilReleaseGuard gil_release_guard;
+        bslmt::ReadLockGuard<bslmt::ReaderWriterLock> guard(&d_started_lock);
+
+        if (!d_started) {
+            throw GenericError(SESSION_STOPPED);
+        }
+
+        bmqa::QueueId queue_id;
+        if (d_session_mp->getQueueId(&queue_id, bmqt::Uri(queue_uri))) {
+            throw GenericError(QUEUE_NOT_OPENED);
+        }
+
+        bmqa::MessageEventBuilder builder;
+        d_session_mp->loadMessageEventBuilder(&builder);
+
+        bmqa::Message& message = builder.startMessage();
+
+        message.setDataRef(payload, payload_length);
+
+        if (properties != Py_None) {
+            message.setPropertiesRef(&c_properties);
+        }
+
+        if (on_ack != Py_None) {
+            message.setCorrelationId(bmqt::CorrelationId(on_ack));
+        }
+
+        message.setCompressionAlgorithmType(d_message_compression_type);
+
+        bmqt::EventBuilderResult::Enum builder_rc = builder.packMessage(queue_id);
+        if (builder_rc) {
+            bsl::ostringstream oss;
+            oss << "Failed to construct message: " << builder_rc;
+            throw GenericError(oss.str());
+        }
+
+        const bmqa::MessageEvent& messageEvent = builder.messageEvent();
+        bmqt::PostResult::Enum post_rc =
+                (bmqt::PostResult::Enum)d_session_mp->post(messageEvent);
+        if (post_rc) {
+            bsl::ostringstream oss;
+            oss << "Failed to post message to " << queue_uri << " queue: " << post_rc;
+            throw GenericError(oss.str());
+        }
+        // We have a successful post and the SDK now owns the `on_ack` callback object
+        // so release our reference without a DECREF.
+        managed_on_ack.release();
+    } catch (const GenericError& exc) {
+        PyErr_SetString(d_error, exc.what());
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
 PyObject*
 Session::confirm(const char* queue_uri, const unsigned char* guid, size_t guid_length)
 {

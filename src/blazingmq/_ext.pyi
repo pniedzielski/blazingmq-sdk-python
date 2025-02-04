@@ -79,6 +79,10 @@ class Session:
         properties: Optional[Dict[bytes, Tuple[Union[int, bytes], int]]] = None,
         on_ack: Optional[Callable[[Ack], None]] = None,
     ) -> None: ...
+    def post_batched(
+        self,
+        messsages: List[Tuple[bytes, bytes, Optional[Dict[bytes, Tuple[Union[int, bytes], int]]], Optional[Callable[[Ack], None]]]]
+    ) -> None: ...
     def configure_queue_sync(
         self,
         queue_uri: bytes,

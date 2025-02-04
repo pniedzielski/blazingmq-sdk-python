@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -747,6 +748,41 @@ class Session:
             properties=props,
             on_ack=on_ack,
         )
+
+    def post_batched(
+        self,
+        messages: List[Message]
+    ) -> None:
+        """Post one or more messages to opened queues in a single call.
+
+        Post the payload and optional properties and overrides of each message
+        to the opened queue specified by that message's *queue_uri* in a
+        single, batched call.  Optionally, each message may be annotated with
+        an *on_ack* callback that is invoked with the incoming acknowledgement
+        for the message posted.
+
+        Args:
+            messages (List[`~blazingmq.Message`]):
+                The messages to be sent in a single batched request.
+
+        Raises:
+            `~blazingmq.Error`: If the post request was not successful.
+        """
+        msgs = []
+        for message in messages:
+            props: Optional[Dict[bytes, Tuple[Union[int, bytes], int]]] = None
+            if message.properties or message.property_types:
+                props = _collect_properties_and_types(
+                    message.properties,
+                    message.property_types
+                )
+            msgs.append(
+                (six.ensure_binary(message.queue_uri),
+                 message.data,
+                 props,
+                 message.on_ack)
+            )
+        self._ext.post_batched(msgs)
 
     def confirm(self, message: Message) -> None:
         """Confirm the specified message from this queue.
