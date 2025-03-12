@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Bloomberg Finance L.P.
+# Copyright 2019-2024 Bloomberg Finance L.P.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ from ._monitors import BasicHealthMonitor
 from ._session import QueueOptions
 from ._session import Session
 from ._session import SessionOptions
+from ._subscriptions import Subscription
 from ._timeouts import Timeouts
 from ._typing import PropertyTypeDict
 from ._typing import PropertyValueDict
@@ -45,6 +46,7 @@ __all__ = [
     "MessageHandle",
     "Session",
     "SessionOptions",
+    "Subscription",
     "Timeouts",
     "__version__",
     "exceptions",
