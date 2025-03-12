@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Bloomberg Finance L.P.
+# Copyright 2019-2024 Bloomberg Finance L.P.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 from bsl cimport optional
 from bsl cimport pair
 from bsl cimport shared_ptr
+from bsl cimport string
 from bsl.bsls cimport TimeInterval
 from libcpp cimport bool as cppbool
 
@@ -87,3 +88,12 @@ cdef extern from "pybmq_session.h" namespace "BloombergLP::pybmq" nogil:
                     object properties,
                     object on_ack) except+
         object confirm(const char* queue_uri, const unsigned char* guid, size_t guid_length) except+
+
+cdef extern from "pybmq_subscription.h" namespace "BloombergLP::pybmq" nogil:
+    cdef struct Subscription:
+        int           d_handle
+        string        d_expression
+        int           d_version
+        optional[int] d_maxUnconfirmedMessages
+        optional[int] d_maxUnconfirmedBytes
+        optional[int] d_consumerPriority
