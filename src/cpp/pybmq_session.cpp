@@ -1,4 +1,4 @@
-// Copyright 2019-2023 Bloomberg Finance L.P.
+// Copyright 2019-2024 Bloomberg Finance L.P.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@
 #include <pybmq_mocksession.h>
 #include <pybmq_refutils.h>
 #include <pybmq_sessioneventhandler.h>
+#include <pybmq_subscription.h>
 
 #include <bsl_memory.h>
 #include <bsl_sstream.h>
@@ -70,6 +71,51 @@ class BrokerTimeoutError : public bsl::runtime_error
     {
     }
 };
+
+/// Configure the user subscriptions on a given queue `options` using the given
+/// `subscriptions` description.  If configuring the subscriptions fails, throw
+/// a `GenericError` with a description of the error.
+void
+configure_subscriptions(bmqt::QueueOptions* options,
+                        const bsl::vector<Subscription>& subscriptions)
+{
+    for (bsl::vector<Subscription>::const_iterator it = subscriptions.begin();
+         it != subscriptions.end();
+         ++it)
+    {
+        // Build handle.
+        bmqt::SubscriptionHandle handle(bmqt::CorrelationId(it->d_handle));
+
+        // Build subscription.
+        bmqt::Subscription subscription;
+        subscription.setExpression(bmqt::SubscriptionExpression(
+            it->d_expression,
+            (bmqt::SubscriptionExpression::Enum)it->d_version));
+
+        if (it->d_maxUnconfirmedMessages) {
+            subscription.setMaxUnconfirmedMessages(
+                *it->d_maxUnconfirmedMessages);
+        }
+
+        if (it->d_maxUnconfirmedBytes) {
+            subscription.setMaxUnconfirmedBytes(*it->d_maxUnconfirmedBytes);
+        }
+
+        if (it->d_consumerPriority) {
+            subscription.setConsumerPriority(*it->d_consumerPriority);
+        }
+
+        // Add subscription to options.
+        bsl::string errorDescription;
+        bool success = options->addOrUpdateSubscription(
+            &errorDescription,
+            handle,
+            subscription);
+        if (!success) {
+            throw GenericError(errorDescription);
+        }
+    }
+}
 
 }  // namespace
 
@@ -255,7 +301,8 @@ Session::open_queue_sync(
         bsl::optional<int> max_unconfirmed_messages,
         bsl::optional<int> max_unconfirmed_bytes,
         bsl::optional<bool> suspends_on_bad_host_health,
-        const bsls::TimeInterval& timeout)
+        const bsls::TimeInterval& timeout,
+        const bsl::vector<Subscription>& subscriptions)
 {
     try {
         pybmq::GilReleaseGuard gil_release_guard;
@@ -293,6 +340,8 @@ Session::open_queue_sync(
             options.setSuspendsOnBadHostHealth(*suspends_on_bad_host_health);
         }
 
+        configure_subscriptions(&options, subscriptions);
+
         bmqa::OpenQueueStatus oqs;
         oqs = d_session_mp->openQueueSync(
                 &dummy,
@@ -327,7 +376,8 @@ Session::configure_queue_sync(
         bsl::optional<int> max_unconfirmed_messages,
         bsl::optional<int> max_unconfirmed_bytes,
         bsl::optional<bool> suspends_on_bad_host_health,
-        const bsls::TimeInterval& timeout)
+        const bsls::TimeInterval& timeout,
+        const bsl::vector<Subscription>& subscriptions)
 {
     try {
         pybmq::GilReleaseGuard gil_release_guard;
@@ -359,6 +409,8 @@ Session::configure_queue_sync(
         if (suspends_on_bad_host_health) {
             options.setSuspendsOnBadHostHealth(*suspends_on_bad_host_health);
         }
+
+        configure_subscriptions(&options, subscriptions);
 
         bmqa::ConfigureQueueStatus cqs;
         cqs = d_session_mp->configureQueueSync(&queue_id, options, timeout);

@@ -1,4 +1,4 @@
-// Copyright 2019-2023 Bloomberg Finance L.P.
+// Copyright 2019-2024 Bloomberg Finance L.P.
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+
+#include <pybmq_subscription.h>
 
 #include <bmqa_abstractsession.h>
 #include <bmqa_manualhosthealthmonitor.h>
@@ -83,7 +85,8 @@ class Session
             bsl::optional<int> max_unconfirmed_messages,
             bsl::optional<int> max_unconfirmed_bytes,
             bsl::optional<bool> suspends_on_bad_host_health,
-            const bsls::TimeInterval& timeout);
+            const bsls::TimeInterval& timeout,
+            const bsl::vector<Subscription>& subscriptions);
 
     PyObject* configure_queue_sync(
             const char* queue_uri,
@@ -91,7 +94,8 @@ class Session
             bsl::optional<int> max_unconfirmed_messages,
             bsl::optional<int> max_unconfirmed_bytes,
             bsl::optional<bool> suspends_on_bad_host_health,
-            const bsls::TimeInterval& timeout);
+            const bsls::TimeInterval& timeout,
+            const bsl::vector<Subscription>& subscriptions);
 
     PyObject*
     close_queue_sync(const char* queue_uri, const bsls::TimeInterval& timeout);

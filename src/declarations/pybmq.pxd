@@ -17,6 +17,7 @@ from bsl cimport optional
 from bsl cimport pair
 from bsl cimport shared_ptr
 from bsl cimport string
+from bsl cimport vector
 from bsl.bsls cimport TimeInterval
 from libcpp cimport bool as cppbool
 
@@ -69,14 +70,16 @@ cdef extern from "pybmq_session.h" namespace "BloombergLP::pybmq" nogil:
                                optional[int] max_unconfirmed_messages,
                                optional[int] max_unconfirmed_bytes,
                                optional[cppbool] suspends_on_bad_host_health,
-                               TimeInterval timeout) except+
+                               TimeInterval timeout,
+                               vector[Subscription] subscriptions) except+
 
         object configure_queue_sync(const char* queue_uri,
                                     optional[int] consumer_priority,
                                     optional[int] max_unconfirmed_messages,
                                     optional[int] max_unconfirmed_bytes,
                                     optional[cppbool] suspends_on_bad_host_health,
-                                    TimeInterval timeout) except+
+                                    TimeInterval timeout,
+                                    vector[Subscription] subscriptions) except+
 
         object close_queue_sync(const char* queue_uri, TimeInterval timeout) except+
 

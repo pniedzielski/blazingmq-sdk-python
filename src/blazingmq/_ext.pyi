@@ -24,6 +24,7 @@ from blazingmq import CompressionAlgorithmType
 from blazingmq import Message
 from blazingmq import MessageHandle
 from blazingmq import PropertyType
+from blazingmq import Subscription
 from blazingmq import Timeouts
 from blazingmq.session_events import SessionEvent
 
@@ -66,6 +67,7 @@ class Session:
         max_unconfirmed_bytes: Optional[int] = None,
         suspends_on_bad_host_health: Optional[bool] = None,
         timeout: Optional[float] = None,
+        subscriptions: Optional[Dict[int, Subscription]] = None,
     ) -> None: ...
     def close_queue_sync(
         self, queue_uri: bytes, *, timeout: Optional[float] = None
@@ -88,6 +90,7 @@ class Session:
         consumer_priority: Optional[int] = None,
         suspends_on_bad_host_health: Optional[bool] = None,
         timeout: Optional[float] = None,
+        subscriptions: Optional[Dict[int, Subscription]] = None,
     ) -> None: ...
     def confirm(self, message: Message) -> None: ...
     @property

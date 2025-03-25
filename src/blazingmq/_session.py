@@ -35,6 +35,7 @@ from ._messages import Ack
 from ._messages import Message
 from ._messages import MessageHandle
 from ._monitors import BasicHealthMonitor
+from ._subscriptions import Subscription
 from ._timeouts import Timeouts
 from ._typing import PropertyTypeDict
 from ._typing import PropertyValueDict
@@ -183,6 +184,14 @@ class QueueOptions:
             with ``read=True`` will not receive messages and a queue opened
             with ``write=True`` will raise if you try to `.post` a message.
             By default, queues are not sensitive to the host's health.
+        subscriptions:
+            The `Subscription`s for this consumer, indexed by a user-provided
+            handle.  Subscriptions allow a consumer to specify that it would
+            like only a subset of available messages to be delivered to it.
+            Messages not matching any consumers' subscriptions will remain on
+            the queue.  The provided handle is arbitrary; it is provided back
+            with the any matching `Message` given to the user's *on_message*
+            callback.
     """
 
     DEFAULT_MAX_UNCONFIRMED_MESSAGES = DEFAULT_MAX_UNCONFIRMED_MESSAGES
@@ -197,17 +206,23 @@ class QueueOptions:
     DEFAULT_SUSPENDS_ON_BAD_HOST_HEALTH = DEFAULT_SUSPENDS_ON_BAD_HOST_HEALTH
     """The *suspends_on_bad_host_health* used by `.open_queue` by default."""
 
+    DEFAULT_SUBSCRIPTIONS: Dict[int, Subscription] = dict()
+    """The *subscriptions* used by `.open_queue` by default.  The default
+    subscription matches all messages unless otherwise configured."""
+
     def __init__(
         self,
         max_unconfirmed_messages: Optional[int] = None,
         max_unconfirmed_bytes: Optional[int] = None,
         consumer_priority: Optional[int] = None,
         suspends_on_bad_host_health: Optional[bool] = None,
+        subscriptions: Optional[Dict[int, Subscription]] = None,
     ) -> None:
         self.max_unconfirmed_messages = max_unconfirmed_messages
         self.max_unconfirmed_bytes = max_unconfirmed_bytes
         self.consumer_priority = consumer_priority
         self.suspends_on_bad_host_health = suspends_on_bad_host_health
+        self.subscriptions = subscriptions
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, QueueOptions):
@@ -217,6 +232,7 @@ class QueueOptions:
             and self.max_unconfirmed_bytes == other.max_unconfirmed_bytes
             and self.consumer_priority == other.consumer_priority
             and self.suspends_on_bad_host_health == other.suspends_on_bad_host_health
+            and self.subscriptions == other.subscriptions
         )
 
     def __ne__(self, other: object) -> bool:
@@ -228,6 +244,7 @@ class QueueOptions:
             "max_unconfirmed_bytes",
             "consumer_priority",
             "suspends_on_bad_host_health",
+            "subscriptions",
         )
 
         params = []
@@ -589,6 +606,7 @@ class Session:
             max_unconfirmed_bytes=options.max_unconfirmed_bytes,
             suspends_on_bad_host_health=options.suspends_on_bad_host_health,
             timeout=_convert_timeout(timeout),
+            subscriptions=options.subscriptions,
         )
 
     def close_queue(self, queue_uri: str, timeout: float = DEFAULT_TIMEOUT) -> None:
@@ -665,6 +683,7 @@ class Session:
             max_unconfirmed_bytes=options.max_unconfirmed_bytes,
             suspends_on_bad_host_health=options.suspends_on_bad_host_health,
             timeout=_convert_timeout(timeout),
+            subscriptions=options.subscriptions,
         )
 
     def get_queue_options(self, queue_uri: str) -> QueueOptions:

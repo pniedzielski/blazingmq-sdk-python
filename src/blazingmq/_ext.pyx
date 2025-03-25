@@ -21,6 +21,7 @@ import weakref
 from bsl cimport optional
 from bsl cimport pair
 from bsl cimport shared_ptr
+from bsl cimport vector
 from bsl.bsls cimport TimeInterval
 from cpython.ceval cimport PyEval_InitThreads
 from libcpp cimport bool as cppbool
@@ -37,7 +38,9 @@ from bmq.bmqt cimport k_DEFAULT_MAX_UNCONFIRMED_MESSAGES
 from bmq.bmqt cimport k_DEFAULT_SUSPENDS_ON_BAD_HOST_HEALTH
 from pybmq cimport BallUtil
 from pybmq cimport Session as NativeSession
+from pybmq cimport Subscription as NativeSubscription
 
+from typing import Dict
 from typing import Optional
 
 from . import _callbacks
@@ -46,6 +49,7 @@ from . import _messages
 from . import _script_name
 from . import _timeouts
 from . import session_events
+from ._subscriptions import Subscription
 from .exceptions import BrokerTimeoutError
 from .exceptions import Error
 
@@ -124,6 +128,46 @@ cdef TimeInterval create_time_interval(timeout: Optional[int|float]=None):
     if timeout is not None:
         return TimeInterval(timeout)
     return TimeInterval()
+
+
+cdef vector[NativeSubscription] create_native_subscriptions(
+    subscriptions: Optional[Dict[int, Subscription]]
+):
+    cdef vector[NativeSubscription] c_native_subscriptions
+    cdef NativeSubscription         c_native_subscription
+    cdef bytes                      c_expression_bytes
+    cdef const char*                c_expression_str
+
+    if subscriptions is not None:
+        for handle, subscription in subscriptions:
+            c_native_subscription.d_handle     = handle
+
+            # Lifetime extend the temporary bytes object; coerce it to a const
+            # char* for Cython codegen.
+            c_expression_bytes = subscription.expression.encode()
+            c_expression_str   = c_expression_bytes
+            c_native_subscription.d_expression = c_expression_str
+
+            c_native_subscription.d_version    = subscription.version
+
+            if subscription.max_unconfirmed_messages is None:
+                c_native_subscription.d_maxUnconfirmedMessages = optional[int]()
+            else:
+                c_native_subscription.d_maxUnconfirmedMessages = optional[int](subscription.max_unconfirmed_messages)
+
+            if subscription.max_unconfirmed_bytes is None:
+                c_native_subscription.d_maxUnconfirmedBytes = optional[int]()
+            else:
+                c_native_subscription.d_maxUnconfirmedBytes = optional[int](subscription.max_unconfirmed_bytes)
+
+            if subscription.consumer_priority is None:
+                c_native_subscription.d_consumerPriority = optional[int]()
+            else:
+                c_native_subscription.d_consumerPriority = optional[int](subscription.consumer_priority)
+
+            c_native_subscriptions.push_back(c_native_subscription)
+
+    return c_native_subscriptions
 
 
 cdef ensure_stop_session_impl(weakref_ext_session):
@@ -258,12 +302,14 @@ cdef class Session:
                         max_unconfirmed_messages: Optional[int] = None,
                         max_unconfirmed_bytes: Optional[int] = None,
                         suspends_on_bad_host_health: Optional[bool] = None,
-                        timeout: Optional[int|float] = None) -> None:
+                        timeout: Optional[int|float] = None,
+                        subscriptions: Optional[Dict[int, Subscription]] = None) -> None:
         cdef optional[int] c_consumer_priority
         cdef optional[int] c_max_unconfirmed_messages
         cdef optional[int] c_max_unconfirmed_bytes
         cdef optional[cppbool] c_suspends_on_bad_host_health
         cdef TimeInterval c_timeout = create_time_interval(timeout)
+        cdef vector[NativeSubscription] c_native_subscriptions = create_native_subscriptions(subscriptions)
 
         if consumer_priority is not None:
             c_consumer_priority = optional[int](consumer_priority)
@@ -284,7 +330,8 @@ cdef class Session:
                                       c_max_unconfirmed_messages,
                                       c_max_unconfirmed_bytes,
                                       c_suspends_on_bad_host_health,
-                                      c_timeout)
+                                      c_timeout,
+                                      c_native_subscriptions)
 
     def configure_queue_sync(self,
                              queue_uri not None: bytes,
@@ -293,12 +340,14 @@ cdef class Session:
                              max_unconfirmed_messages: Optional[int] = None,
                              max_unconfirmed_bytes: Optional[int] = None,
                              suspends_on_bad_host_health: Optional[bool] = None,
-                             timeout: Optional[int|float] = None) -> None:
+                             timeout: Optional[int|float] = None,
+                             subscriptions: Optional[Dict[int, Subscription]] = None) -> None:
         cdef optional[int] c_consumer_priority
         cdef optional[int] c_max_unconfirmed_messages
         cdef optional[int] c_max_unconfirmed_bytes
         cdef optional[cppbool] c_suspends_on_bad_host_health
         cdef TimeInterval c_timeout = create_time_interval(timeout)
+        cdef vector[NativeSubscription] c_native_subscriptions = create_native_subscriptions(subscriptions)
 
         if consumer_priority is not None:
             c_consumer_priority = optional[int](consumer_priority)
@@ -317,7 +366,8 @@ cdef class Session:
                                            c_max_unconfirmed_messages,
                                            c_max_unconfirmed_bytes,
                                            c_suspends_on_bad_host_health,
-                                           c_timeout)
+                                           c_timeout,
+                                           c_native_subscriptions)
 
     def close_queue_sync(self,
                          queue_uri not None: bytes,
