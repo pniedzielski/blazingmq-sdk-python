@@ -285,6 +285,17 @@ MessageUtils::get_message_queue_uri(const bmqa::Message& message)
 }
 
 PyObject*
+MessageUtils::get_message_subscription_handle(const bmqa::Message& message)
+{
+    const bmqt::CorrelationId& corrId = message.correlationId();
+    if (corrId.isNumeric()) {
+        return PyLong_FromLong(corrId.theNumeric());
+    } else {
+        return Py_None;
+    }
+}
+
+PyObject*
 MessageUtils::get_messages(
         const bmqa::MessageEvent& event,
         PyObject* session_event_callback)
@@ -299,11 +310,12 @@ MessageUtils::get_messages(
         const bmqa::Message& message = message_iterator.message();
         bsl::vector<bsl::string> collated_errors;
         bslma::ManagedPtr<PyObject> pymessage = RefUtils::toManagedPtr(Py_BuildValue(
-                "(N N N N)",
+                "(N N N N N)",
                 MessageUtils::get_message_data(message),
                 MessageUtils::get_message_guid(message),
                 MessageUtils::get_message_queue_uri(message),
-                MessageUtils::get_message_properties(&collated_errors, message)));
+                MessageUtils::get_message_properties(&collated_errors, message),
+                MessageUtils::get_message_subscription_handle(message)));
 
         if (!pymessage) {
             return NULL;

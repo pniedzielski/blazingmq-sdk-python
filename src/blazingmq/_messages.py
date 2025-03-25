@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Bloomberg Finance L.P.
+# Copyright 2019-2024 Bloomberg Finance L.P.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,10 +38,13 @@ def create_message(
     queue_uri: str,
     properties: PropertyValueDict,
     property_types: PropertyTypeDict,
+    subscription_handle: Optional[int] = None,
 ) -> Message:
     inst = Message.__new__(Message)
     assert isinstance(inst, Message)
-    inst._set_attrs(data, guid, queue_uri, properties, property_types)
+    inst._set_attrs(
+        data, guid, queue_uri, properties, property_types, subscription_handle
+    )
     return inst
 
 
@@ -63,6 +66,9 @@ class Message:
         property_types (dict): A mapping of property names to
             `PropertyType` types. The dictionary is guaranteed to provide
             a value for each key already present in `Message.properties`
+        subscription_handle (Optional[int]): The handle of the subscription
+            that matched this message, provided when the subscription was
+            configured.
     """
 
     def _set_attrs(
@@ -72,6 +78,7 @@ class Message:
         queue_uri: str,
         properties: PropertyValueDict,
         property_types: PropertyTypeDict,
+        subscription_handle: Optional[int],
     ) -> None:
         """Teach mypy what our instance variables are despite our private __init__"""
         self.data = data
@@ -79,6 +86,7 @@ class Message:
         self.queue_uri = queue_uri
         self.properties = properties
         self.property_types = property_types
+        self.subscription_handle = subscription_handle
 
     def __init__(self) -> None:
         raise Error("The Message class does not have a public constructor.")

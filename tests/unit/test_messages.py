@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Bloomberg Finance L.P.
+# Copyright 2019-2024 Bloomberg Finance L.P.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,10 @@ def test_create_message():
     queue_uri = QUEUE_NAME.decode("utf-8")
     properties = {"foo": "m"}
     property_types = {"foo": blazingmq.PropertyType.CHAR}
-    m = create_message(data, guid, queue_uri, properties, property_types)
+    subscription_handle = 123
+    m = create_message(
+        data, guid, queue_uri, properties, property_types, subscription_handle
+    )
 
     # THEN
     assert m.data == data
@@ -42,6 +45,7 @@ def test_create_message():
     assert m.queue_uri == queue_uri
     assert m.properties["foo"] == properties["foo"]
     assert m.property_types["foo"] == property_types["foo"]
+    assert m.subscription_handle == subscription_handle
 
 
 def test_construct_message():
@@ -62,7 +66,10 @@ def test_message_repr():
     queue_uri = "bmq://foo/bar"
     properties = {"foo": "m"}
     property_types = {"foo": blazingmq.PropertyType.CHAR}
-    m = create_message(data, guid, queue_uri, properties, property_types)
+    subscription_handle = 123
+    m = create_message(
+        data, guid, queue_uri, properties, property_types, subscription_handle
+    )
 
     # THEN
     assert repr(m) == "<Message[00000F0007D9D17AD0E18C2E7A86E154] for bmq://foo/bar>"

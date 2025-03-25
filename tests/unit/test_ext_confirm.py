@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Bloomberg Finance L.P.
+# Copyright 2019-2024 Bloomberg Finance L.P.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +52,7 @@ def test_confirm_fails_with_error(confirm_rc, confirm_error):
                 QUEUE_NAME,
                 {},
                 {},
+                None,
             )
         )
 
@@ -76,7 +77,7 @@ def test_confirm_with_invalid_guid():
     # WHEN
     with pytest.raises(Exception) as exc:
         session.confirm(
-            create_message(b"blah", b"\x00\x00\x0f\x00", QUEUE_NAME, {}, {})
+            create_message(b"blah", b"\x00\x00\x0f\x00", QUEUE_NAME, {}, {}, None)
         )
 
     # THEN
@@ -98,6 +99,7 @@ def test_confirm_with_invalid_queue():
                 QUEUE_NAME,
                 {},
                 {},
+                None,
             )
         )
 
@@ -128,6 +130,7 @@ def test_confirm_successful():
             QUEUE_NAME,
             {},
             {},
+            None,
         )
     )
 
@@ -160,6 +163,7 @@ def test_confirm_with_closing_queue():
                 QUEUE_NAME,
                 {},
                 {},
+                None,
             )
         )
 

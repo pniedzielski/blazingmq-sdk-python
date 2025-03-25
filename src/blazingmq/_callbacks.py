@@ -107,17 +107,17 @@ def on_message(
     user_callback: Callable[[Message, MessageHandle], None],
     ext_session_wr: weakref.ref[_ext.Session],
     property_type_to_py: Mapping[int, PropertyType],
-    messages: Iterable[Tuple[bytes, bytes, bytes, PropertiesAndTypesDictsType]],
+    messages: Iterable[Tuple[bytes, bytes, bytes, PropertiesAndTypesDictsType, int]],
 ) -> None:
     ext_session = ext_session_wr()
     assert ext_session is not None, "ext.Session has been deleted"
-    for data, guid, queue_uri, properties_tuple in messages:
+    for data, guid, queue_uri, properties_tuple, subscription_handle in messages:
         properties, property_types = properties_tuple
         property_types_py = {
             k: property_type_to_py[v] for k, v in property_types.items()
         }
         message = create_message(
-            data, guid, queue_uri.decode(), properties, property_types_py
+            data, guid, queue_uri.decode(), properties, property_types_py, subscription_handle
         )
         message_handle = create_message_handle(message, ext_session)
         user_callback(message, message_handle)

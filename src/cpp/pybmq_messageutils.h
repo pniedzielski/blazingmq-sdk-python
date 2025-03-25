@@ -59,6 +59,9 @@ struct MessageUtils
     static PyObject* get_message_queue_uri(const bmqa::Message& message);
     // Get the BlazingMQ message Queue URI as bytes object
 
+    static PyObject* get_message_subscription_handle(const bmqa::Message& message);
+    // Get the BlazingMQ message subscription handle as a Python optional int.
+
     static PyObject*
     get_messages(const bmqa::MessageEvent& event, PyObject* session_event_callback);
     // Convert every message in the specified 'event' into a tuple object, returning
