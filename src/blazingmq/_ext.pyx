@@ -59,10 +59,9 @@ cdef _log_callback(const char *name,
                    const char *filename,
                    int line,
                    const char *msg) noexcept:
-    if not LOGGER.isEnabledFor(level):
-        return
-    rec = LOGGER.makeRecord(name, level, filename, line, msg, (), None)
-    LOGGER.handle(rec)
+    if LOGGER.isEnabledFor(level):
+        rec = LOGGER.makeRecord(name, level, filename, line, msg, (), None)
+        LOGGER.handle(rec)
 
 
 SESSION_EVENT_TYPE_MAPPING = {
