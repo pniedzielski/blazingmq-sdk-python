@@ -87,6 +87,8 @@ lint:
 	$(PYTHON) -m flake8 --config=$(CURDIR)/tests/.flake8 examples
 	$(PYTHON) -m isort --check-only --settings-path=$(CURDIR)/.isort.cfg src tests examples setup.py
 	MYPYPATH=src $(PYTHON) -m mypy --strict examples src
+        $(python) -m pylint --output-format=colorized --msg-template '{path} line {line}: [{symbol}] {msg}' src/blazingmq
+        $(python) -m pylint --output-format=colorized --msg-template '{path} line {line}: [{symbol}] {msg}' examples
 	clang-format --Werror --dry-run src/cpp/*
 
 # https://www.npmjs.com/package/markdownlint-cli
