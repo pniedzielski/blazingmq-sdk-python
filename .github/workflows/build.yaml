@@ -120,7 +120,6 @@ jobs:
             gdb \
             curl \
             cmake \
-            cmake \
             ninja-build \
             pkg-config \
             bison \
