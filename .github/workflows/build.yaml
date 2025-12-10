@@ -15,7 +15,7 @@ jobs:
     name: Build BlazingMQ as a dependency
     runs-on: ubuntu-24.04
     outputs:
-      blazingmq_sha: ${{ steps.get-sha.outputs.blazingmq_sha }}
+      cache_key: ${{ steps.get-sha.outputs.blazingmq_sha }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,7 +95,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: blazingmq_artifacts.tar.gz
-          key: ${{ needs.blazingmq-dependency.outputs.blazingmq_sha }}
+          key: ${{ needs.blazingmq-dependency.outputs.cache_key }}
       - name: Restore cached BlazingMQ build artifacts
         run: tar xzf blazingmq_artifacts.tar.gz
       - name: Set up Python ${{ matrix.python-version }}
@@ -154,7 +154,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: blazingmq_artifacts.tar.gz
-          key: ${{ needs.blazingmq-dependency.outputs.blazingmq_sha }}
+          key: ${{ needs.blazingmq-dependency.outputs.cache_key }}
       - name: Restore cached BlazingMQ build artifacts
         run: tar xzf blazingmq_artifacts.tar.gz
       - name: Set up Python 3.9
@@ -208,7 +208,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: blazingmq_artifacts.tar.gz
-          key: ${{ needs.blazingmq-dependency.outputs.blazingmq_sha }}
+          key: ${{ needs.blazingmq-dependency.outputs.cache_key }}
       - name: Restore cached BlazingMQ build artifacts
         run: tar xzf blazingmq_artifacts.tar.gz
       - name: Set up Python
