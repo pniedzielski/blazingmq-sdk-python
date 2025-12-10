@@ -106,6 +106,8 @@ if [ ! -e "${DIR_BUILD}/ntf-core/.complete" ]; then
         --output "${DIR_BUILD}/ntf-core" \
         --ufid opt_64_pic_cpp17 \
         --generator "Ninja" \
+        --without-lz4 \
+        --without-zstd \
         --without-warnings-as-errors \
         --without-usage-examples \
         --without-applications
