@@ -19,13 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout BlazingMQ
-        run:  git clone --depth 1 https://github.com/bloomberg/blazingmq
-
-      - name: Get latest BlazingMQ commit SHA
+      - name: Compute hash of dependency versions
         id: get-sha
-        working-directory: blazingmq
-        run: echo "blazingmq_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "blazingmq_sha=$(sha1sum bin/clone-dependencies.sh | awk '{ print $1 }')" >> $GITHUB_OUTPUT
 
       - name: Try to get cached BlazingMQ build artifacts
         id: cache-restore
