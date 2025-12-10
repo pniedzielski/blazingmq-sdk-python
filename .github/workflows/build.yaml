@@ -194,6 +194,12 @@ jobs:
         env:
           PYTHON: ./venv/bin/python
           SPHINXBUILD: ../venv/bin/sphinx-build
+      - name: Package docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: docs/_build/html
+          compression-level: 9
 
   coverage:
     name: Coverage
