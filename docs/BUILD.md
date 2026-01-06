@@ -37,11 +37,23 @@ When in an interactive command line prompt, you can use the following `make`
 targets to build and test the BlazingMQ Python SDK. Check the
 appropriate GitHub Actions configuration to set up the appropriate environment
 variables that may be needed prior to running these commands (such as setting
-`PYEXEC`).  With a BlazingMQ broker running at `tcp://localhost:30114`, the
-following targets build and test the Python SDK:
+`PYEXEC`).  The following targets build Python SDK:
 
 ```shell
 make test-install
+```
+
+To run the tests, we need to start a broker running at `tcp://localhost:30114`:
+
+```shell
+mkdir -p bmq/logs
+mkdir -p bmq/storage/archive
+./build/blazingmq/src/applications/bmqbrkr/bmqbrkr.tsk ./tests/broker-config
+```
+
+And then run the tests as below:
+
+```shell
 BMQ_BROKER_URI=tcp://localhost:30114 make check
 ```
 

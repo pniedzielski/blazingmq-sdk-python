@@ -1,0 +1,1 @@
+Add more details on how to run tests locally
