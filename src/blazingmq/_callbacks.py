@@ -123,12 +123,14 @@ def on_message(
         user_callback(message, message_handle)
 
     del message_handle  # The message handle holds a reference to the extension session.
-    if sys.getrefcount(ext_session) == 2:  # covered in a subprocess  # pragma: no cover
+    ext_session_ref_count = sys.getrefcount(ext_session)
+    if ext_session_ref_count == 2:  # covered in a subprocess  # pragma: no cover
         # Dropping our reference to the extension session will drop its reference count
         # to 0, calling __dealloc__ and stop() from its own background thread.
         print(
-            "Deadlock detected by blazingmq after calling %s; aborting process."
-            % user_callback,
+            f"Deadlock detected by blazingmq after calling { user_callback } " +
+            f"(ext_session ref count is { ext_session_ref_count }); " +
+            f"aborting process.",
             file=sys.stderr,
         )
         try:
