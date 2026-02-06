@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+import platform
+import string
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -23,6 +25,7 @@ from typing import Tuple
 from typing import Union
 
 from . import _six as six
+from ._about import __version__
 from ._enums import CompressionAlgorithmType
 from ._enums import PropertyType
 from ._ext import DEFAULT_CONSUMER_PRIORITY
@@ -70,6 +73,41 @@ def _validate_timeouts(timeouts: Timeouts) -> Timeouts:
         configure_queue_timeout=_convert_timeout(timeouts.configure_queue_timeout),
         close_queue_timeout=_convert_timeout(timeouts.close_queue_timeout),
     )
+
+
+def _validate_user_agent_prefix(user_agent_prefix: Optional[bytes]) -> bytes:
+    """Validate a user agent prefix bytestring for use by the Cython layer.
+
+    If the user agent prefix string is longer than 96 bytes or contains
+    non-printable characters, raise a `ValueError`.  Otherwise, return the user
+    agent prefix string unchanged.
+    """
+    if user_agent_prefix is None:
+        user_agent_prefix = b""
+    if len(user_agent_prefix) > 96:
+        raise ValueError(
+            f"user_agent_prefix ({user_agent_prefix!r}) must be less than 96 "
+            f"bytes (is {len(user_agent_prefix)} bytes)"
+        )
+    elif any(c not in string.printable.encode("ascii") for c in user_agent_prefix):
+        raise ValueError(
+            f"user_agent_prefix ({user_agent_prefix!r}) must only contain "
+            f"printable characters"
+        )
+    else:
+        return _construct_user_agent_prefix(user_agent_prefix)
+
+
+def _construct_user_agent_prefix(user_agent_prefix: bytes) -> bytes:
+    """Construct the user agent prefix for use by the Cython layer."""
+    if user_agent_prefix != b"":
+        user_agent_prefix += b" "
+    python_version = platform.python_version().encode("ascii", errors="strict")
+    blazingmq_version = __version__.encode("ascii", errors="strict")
+    user_agent_prefix += (
+        b"blazingmq(python" + python_version + b"):" + blazingmq_version
+    )
+    return user_agent_prefix
 
 
 def _convert_timeout(timeout: Optional[float]) -> Optional[float]:
@@ -288,6 +326,12 @@ class SessionOptions:
             0, disable the recurring dump of stats (final stats are always
             dumped at the end of the session).  The default is 5min; the value
             must be a multiple of 30s, in the range ``[0s - 60min]``.
+        user_agent_prefix:
+            Bytestring to include in the user agent for broker telemetry. This
+            string must only contain printable characters and must be less than
+            96 bytes long.  This is provided for libraries that are wrapping
+            this SDK.  Applications directly using the SDK are encouraged *NOT*
+            to set this value.
     """
 
     def __init__(
@@ -300,6 +344,7 @@ class SessionOptions:
         channel_high_watermark: Optional[int] = None,
         event_queue_watermarks: Optional[tuple[int, int]] = None,
         stats_dump_interval: Optional[float] = None,
+        user_agent_prefix: Optional[bytes] = None,
     ) -> None:
         self.message_compression_algorithm = message_compression_algorithm
         self.timeouts = timeouts
@@ -309,6 +354,7 @@ class SessionOptions:
         self.channel_high_watermark = channel_high_watermark
         self.event_queue_watermarks = event_queue_watermarks
         self.stats_dump_interval = stats_dump_interval
+        self.user_agent_prefix = user_agent_prefix
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SessionOptions):
@@ -322,6 +368,7 @@ class SessionOptions:
             and self.channel_high_watermark == other.channel_high_watermark
             and self.event_queue_watermarks == other.event_queue_watermarks
             and self.stats_dump_interval == other.stats_dump_interval
+            and self.user_agent_prefix == other.user_agent_prefix
         )
 
     def __ne__(self, other: object) -> bool:
@@ -337,6 +384,7 @@ class SessionOptions:
             "channel_high_watermark",
             "event_queue_watermarks",
             "stats_dump_interval",
+            "user_agent_prefix",
         )
 
         params = []
@@ -399,6 +447,11 @@ class Session:
             stats are always dumped at the end of the session).  The default is
             5min; the value must be a multiple of 30s, in the range
             ``[0s - 60min]``.
+        user_agent_prefix: Bytestring to include in the user agent for broker
+            telemetry. This string must only contain printable characters and
+            must be less than 128 bytes long.  This is provided for libraries
+            that are wrapping this SDK.  Applications directly using the SDK
+            are encouraged *NOT* to set this value.
 
     Raises:
         `~blazingmq.Error`: If the session start request was not successful.
@@ -423,6 +476,7 @@ class Session:
         channel_high_watermark: Optional[int] = None,
         event_queue_watermarks: Optional[tuple[int, int]] = None,
         stats_dump_interval: Optional[float] = None,
+        user_agent_prefix: Optional[bytes] = None,
     ) -> None:
         if host_health_monitor is not None:
             if not isinstance(host_health_monitor, BasicHealthMonitor):
@@ -459,6 +513,7 @@ class Session:
             timeouts=_validate_timeouts(timeout),
             monitor_host_health=monitor_host_health,
             fake_host_health_monitor=fake_host_health_monitor,
+            user_agent_prefix=_validate_user_agent_prefix(user_agent_prefix),
         )
         self._ext.set_owned_by_session()
 
@@ -516,6 +571,7 @@ class Session:
                 session_options.channel_high_watermark,
                 session_options.event_queue_watermarks,
                 session_options.stats_dump_interval,
+                session_options.user_agent_prefix,
             )
         else:
             return cls(
@@ -530,6 +586,7 @@ class Session:
                 session_options.channel_high_watermark,
                 session_options.event_queue_watermarks,
                 session_options.stats_dump_interval,
+                session_options.user_agent_prefix,
             )
 
     def open_queue(
