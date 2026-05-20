@@ -52,7 +52,7 @@ PATH="${DIR_THIRDPARTY}/bde-tools/bin:$PATH"
 
 if [ ! -e "${DIR_BUILD}/bde/.complete" ]; then
     pushd "${DIR_THIRDPARTY}/bde"
-    eval "$(bbs_build_env -u opt_64_pic_cpp17 -b "${DIR_BUILD}/bde" -i ${DIR_INSTALL})"
+    eval "$(bbs_build_env -u opt_64_pic_cpp23 -b "${DIR_BUILD}/bde" -i ${DIR_INSTALL})"
     bbs_build configure --prefix="${DIR_INSTALL}"
     bbs_build build -j 16
     bbs_build install --install_dir "/" --prefix="${DIR_INSTALL}"
@@ -66,7 +66,7 @@ if [ ! -e "${DIR_BUILD}/ntf-core/.complete" ]; then
     pushd "${DIR_THIRDPARTY}/ntf-core"
     ./configure --prefix "${DIR_INSTALL}" \
         --output "${DIR_BUILD}/ntf-core" \
-        --ufid opt_64_pic_cpp17 \
+        --ufid opt_64_pic_cpp23 \
         --generator "Ninja" \
         --with-zlib \
         --without-lz4 \
@@ -95,7 +95,7 @@ if [ ! -e "${DIR_BUILD}/blazingmq/.complete" ]; then
     export PKG_CONFIG_PATH="${DIR_INSTALL}/lib/pkgconfig:${BREW_PKG_CONFIG_PATH}"
     CMAKE_OPTIONS=(\
         -DBDE_BUILD_TARGET_64=1 \
-        -DBDE_BUILD_TARGET_CPP17=ON \
+        -DBDE_BUILD_TARGET_CPP23=ON \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DINSTALL_TARGETS="bmq" \
         -DCMAKE_INSTALL_LIBDIR="lib" \

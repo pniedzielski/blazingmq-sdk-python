@@ -100,7 +100,7 @@ def create_extension(name, libraries, **kwargs):
         extra_compile_args.append("-DCYTHON_NCP_UNUSED=CYTHON_UNUSED")
 
     # Hardwire C++ flags needed for BDE bslstl support.
-    extra_compile_args.extend(["-std=gnu++17", "-D_GLIBCXX_USE_CXX11_ABI=0"])
+    extra_compile_args.extend(["-std=gnu++23", "-D_GLIBCXX_USE_CXX11_ABI=0"])
 
     extra_link_args = []
 
