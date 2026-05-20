@@ -41,7 +41,7 @@ fi
 
 if [ ! -d "${DIR_THIRDPARTY}/blazingmq" ]; then
     git clone                                                                  \
-        https://github.com/bloomberg/blazingmq.git                             \
+        https://github.com/pniedzielski/blazingmq.git                           \
         "${DIR_THIRDPARTY}/blazingmq"
     git -C "${DIR_THIRDPARTY}/blazingmq" checkout ${BLAZINGMQ_TAG}
 fi
